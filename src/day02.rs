@@ -23,6 +23,23 @@ fn test_safety (sequence:&str) -> bool {
     true
 }
 
+fn test_dampened_safety(sequence:&str) -> bool {
+    if test_safety(sequence) {
+        return true;
+    } 
+    let mut nums:Vec<i32> = sequence.split(" ").map(|n| n.parse::<i32>().expect("entries should all be numbers")).collect(); 
+
+    for i in 0..nums.len() {
+        let mut copy = nums.clone();
+        copy.remove(i);
+        let removed_sequence = copy.into_iter().map(|x| x.to_string()).collect::<Vec<String>>().join(" ");
+        if test_safety(&removed_sequence) {
+            return true;
+        };
+    };
+    false
+}
+
 pub(crate) fn day02 () {
     let path = "input/D02.txt";
     let contents = fs::read_to_string(path).expect("file should open");
@@ -32,5 +49,14 @@ pub(crate) fn day02 () {
             total += 1;
         }
     }
-    println!("Part 1: {}", total)
+    println!("Part 1: {}", total);
+
+    total = 0;
+    for line in contents.lines() {
+        if test_dampened_safety(line) {
+            total += 1;
+        }
+    }
+    println!("Part 2: {}", total)
+
 }
