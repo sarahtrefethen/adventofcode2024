@@ -1,5 +1,7 @@
 
-def parse(input):
+import numpy
+
+def parse1(input):
     blocks = input.strip().split('\n\n')
     machines = []
     for block in blocks:
@@ -10,23 +12,39 @@ def parse(input):
         machines.append((ad, bd, prize))
     return machines
 
-def part1(input):
-    machines = parse(input)
-    total = 0
-    for ([ax, ay],[bx, by],[px,py]) in machines:
-        # solve for the smallest combined values of a,b where:
-        # a*ax + b*bx == px
-        # a*ay + b*by == py
-        solutions = []
-        for a in range(0,100):
-            for b in range(0,100):
-                if (a*ax + b*bx == px and a*ay + b*by == py):
-                    solutions.append((a, b))
-        if len(solutions) > 0:
-            total += min([a*3+b for (a,b) in solutions])
-    
-    return total
+def parse2(input):
+    blocks = input.strip().split('\n\n')
+    machines = []
+    for block in blocks:
+        [a_line, b_line, p_line] = block.splitlines()
+        ad = [int(substr.split('+')[1]) for substr in a_line.split(': ')[1].split(', ')]
+        bd = [int(substr.split('+')[1]) for substr in b_line.split(': ')[1].split(', ')]
+        prize = [int(substr.split("=")[1])+10000000000000 for substr in p_line.split(': ')[1].split(", ")]
+        machines.append((ad, bd, prize))
+    return machines
 
+def solve(machines):
+        total = 0
+        for ([ax, ay],[bx, by],[px,py]) in machines:
+            if (ax/ay > px/py and bx/by > px/py) or (ax/ay < px/py and bx/by < px/py):
+                #small optimization -- some things are non-starters 
+                continue 
+           
+            # this feels like cheating but here we are
+            [a,b] = numpy.linalg.lstsq([[ax, bx],[ay,by]],[px,py], rcond=None)[0]
+            a=round(a)
+            b=round(b)
+            if (a*ax + b*bx == px and a*ay + b*by == py):
+                total += a*3+b
+        return total        
+
+def part1(input):
+    machines = parse1(input)
+    return solve(machines)
+
+def part2(input):
+    machines = parse2(input)
+    return solve(machines)
 
 assert part1(
     '''
@@ -48,4 +66,6 @@ Prize: X=18641, Y=10279'''
 ) == 480
 
 with open('../input/D13.txt', 'r') as file:
-    print(f'part 1: {part1(file.read())}')
+    input = file.read()
+print(f'part 1: {part1(input)}')
+print(f'part 2: {part2(input)}')
