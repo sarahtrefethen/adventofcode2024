@@ -1,3 +1,4 @@
+import math
 DIRS = [E, S, W, N] = [[0,1], [1,0], [0, -1], [-1,0]]
 
 END = "E"
@@ -38,10 +39,11 @@ class Maze:
 
 def part1(input):
     maze = Maze(input)
-    queue = [(*maze.start, 0, set(), 0)]
+    queue = [(*maze.start, 0, 0)]
     solutions = []
+    min_score_to_get_to = {maze.start: 0}
     while len(queue) > 0:
-        (r,c,dir_index, visited, score) = queue.pop(0)
+        (r,c,dir_index, score) = queue.pop(0)
         forward = move_one(r,c,dir_index)
         left = move_one(r,c,turn_left(dir_index))
         right = move_one(r,c,turn_right(dir_index))
@@ -50,13 +52,20 @@ def part1(input):
         if maze.get(left) == END or maze.get(right) == END:
             solutions.append(score + 1000)
         
-        if maze.get(forward) == OPEN and (forward[0],forward[1]) not in visited:
-
-            queue.append((*forward, dir_index, set([*visited, (forward[0],forward[1])]), score+1))
-        if maze.get(left) == OPEN and (left[0],left[1]) not in visited:
-            queue.append((*left, turn_left(dir_index), set([*visited, (left[0],left[1])]), score+1001))
-        if maze.get(right) == OPEN and (right[0],right[1]) not in visited:
-            queue.append((*right, turn_right(dir_index), set([*visited, (right[0],right[1])]), score+1001))
+        if maze.get(forward) == OPEN:
+            [fr, fc] = forward
+            if min_score_to_get_to.get((fr,fc), math.inf) > score+1:
+                min_score_to_get_to[(fr,fc)] = score+1
+                queue.append((fr, fc, dir_index, score+1))
+        if maze.get(left) == OPEN:
+            if min_score_to_get_to.get((left[0],left[1]), math.inf) > score+1001:
+                min_score_to_get_to[(left[0],left[1])] = score+1001
+                queue.append((*left, turn_left(dir_index), score+1001))
+        if maze.get(right) == OPEN:
+            [rr, rc] = right
+            if min_score_to_get_to.get((rr,rc), math.inf) > score+1001:
+                min_score_to_get_to[(rr,rc)] = score+1001
+                queue.append((rr, rc, turn_right(dir_index), score+1001))
     print(solutions)
     return min(solutions)
 
